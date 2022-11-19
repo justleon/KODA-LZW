@@ -31,8 +31,19 @@ def readFilePGM(filename:str, pathFile:str =""):
 
 def calculateDataCount(data:list, alphabet:list=[]):
     countData = {}
+    countDataForSecondRank = {}
+    countDataForThirdRank = {}
+
+    # Prepare histograms of data for base entropy
+    # and data blocks for second and third rank entropy.
+
     for i in alphabet:
         countData[i] = 0
+        countDataForSecondRank[np.uint32(i)] = 0
+        countDataForThirdRank[np.uint32(i)] = 0
+
+    # Calculate data counts for entropy
+
     for i in data:
         if i in countData.keys():
             countData[i] += 1
@@ -40,7 +51,30 @@ def calculateDataCount(data:list, alphabet:list=[]):
             print("WARNING: add new value (%s) to alphabet" % (i))
             alphabet.append(i)
             countData[i] = 1
-    return countData
+
+    # Calculate counts of data blocks of second rank for entropy-2
+
+    for i in range(0, len(data) - 1, 2):
+        block = np.uint32(data[i]) + (np.uint32(data[i+1] << 8))
+
+        if block in countDataForSecondRank.keys():
+            countDataForSecondRank[block] += 1
+        else:
+            alphabet.append(block)
+            countDataForSecondRank[block] = 1
+
+    # Calculate counts of data blocks of third rank for entropy-3
+
+    for i in range(0, len(data) - 2, 3):
+        block = np.uint32(data[i]) + (np.uint32(data[i + 1] << 8)) + (np.uint32(data[i + 2] << 16))
+
+        if block in countDataForThirdRank.keys():
+            countDataForThirdRank[block] += 1
+        else:
+            alphabet.append(block)
+            countDataForThirdRank[block] = 1
+
+    return countData, countDataForSecondRank, countDataForThirdRank
 
 def showHistogram(countData:dict, dataName:str="", showHist:bool=False, saveHist:bool=False, pathSaveFile:str=""):
     plt.bar(list(countData.keys()), list(countData.values()), width=1)
@@ -51,7 +85,7 @@ def showHistogram(countData:dict, dataName:str="", showHist:bool=False, saveHist
         plt.show()
     plt.close()
 
-def calculateEntropy(countData:dict, logBase=2):
+def calculateEntropy(countData:dict,countData_second:dict,countData_third:dict, logBase=2):
     countAllData = 0
     for i in countData:
         countAllData += countData[i]
@@ -59,6 +93,19 @@ def calculateEntropy(countData:dict, logBase=2):
     entropy = 0
     for i in countData:
         if countData[i] > 0:
-            p = countData[i]/countAllData
+            p = countData[i] / countAllData
             entropy += p * math.log(p, logBase)
-    return entropy*(-1)
+
+    entropy_second = 0
+    for i in countData_second:
+        if countData_second[i] > 0:
+            p = countData_second[i] / (countAllData/2)
+            entropy_second += p * math.log(p, logBase)
+
+    entropy_third = 0
+    for i in countData_third:
+        if countData_third[i] > 0:
+            p = countData_third[i] / (countAllData/3)
+            entropy_third += p * math.log(p, logBase)
+
+    return entropy*(-1), entropy_second*(-1), entropy_third*(-1)
