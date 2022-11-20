@@ -7,6 +7,7 @@
 #ifndef KODA_LZW_CODEC_H
 #define KODA_LZW_CODEC_H
 
+#include <map>
 #include <vector>
 #include <string>
 #include <cstdint>
@@ -17,11 +18,11 @@ namespace LZW {
 
     class Codec {
     public:
-        void coder(std::string filePath);
+        void Coder(std::string& filePath, int dictBitSize);
 
     private:
-        std::vector<uint8_t> read(std::string filePath, bool verbose = false);
-
+        std::vector<uint8_t> ReadFile(std::string filePath, bool verbose = false);
+        void WriteFile(std::string fileName);
     };
 
 } // LZW

@@ -4,44 +4,54 @@
 // Created on 16.11.2022.
 //
 
-#include <map>
+#include <valarray>
 #include "Codec.h"
 
 namespace LZW {
 
-    void EmitCode(int code) {
-        std::cout << "<" << code << ">";
-    }
+#pragma region Codec
+    //TODO: In current form this is very basic implementation (needs more universal form)
+    //Maybe implement it on templates?
+    void Codec::Coder(std::string& filePath, int dictBitSize) {
+        if (dictBitSize >= 33) {
+            throw std::out_of_range("Dictionary index bit size can't be bigger than 32");
+        }
 
-    void Codec::coder(std::string filePath) {
-        std::map<std::string, int> table;
+        std::map<std::basic_string<uint8_t>, int> table;
+        uint32_t maxDictSize = pow(2, dictBitSize);
         for(int i = 0; i < 256; i++) {
-            std::string record {};
+            std::basic_string<uint8_t> record {};
             record += uint8_t(i);
             table[record] = i;
         }
 
-        std::vector<uint8_t> buffer = read(filePath, true);
-        std::string p, c;
-        p = buffer[0];
-        int index = 1;
-        int recordCount = 256;
-        while (index < buffer.size()) {
-            c = buffer[index];
+        std::vector<uint8_t> inputBuffer = ReadFile(filePath);
+        std::vector<uint32_t> output;
+        std::basic_string<uint8_t> p, c;
+        p = inputBuffer[0];
+        int index = 1, recordCount = 256;
+
+        while (index < inputBuffer.size()) {
+            c = inputBuffer[index];
             if(table.find(p + c) != table.end()) {
                 p += c;
             }
             else {
-                table[p+c] = recordCount++;
-                EmitCode(table[p]);
+                if (recordCount < maxDictSize) {
+                    table[p + c] = recordCount++;
+                }
+                output.push_back(table[p]);
                 p = c;
             }
             index++;
         }
-        EmitCode(table[p]);
+        output.push_back(table[p]);
     }
 
-    std::vector<uint8_t> Codec::read(std::string filePath, bool verbose) {
+#pragma endregion
+
+#pragma region I/O
+    std::vector<uint8_t> Codec::ReadFile(std::string filePath, bool verbose) {
         std::ifstream file(filePath, std::ios::binary);
         if(file) {
             std::streampos begOfFile, endOfFile;
@@ -51,6 +61,7 @@ namespace LZW {
             begOfFile = file.tellg();
 
             long fileSize = endOfFile - begOfFile;
+            std::cout << filePath << " size: " << fileSize << std::endl;
             if (fileSize == 0) {
                 std::cout << "File is empty." << std::endl;
                 return std::vector<uint8_t>{};
@@ -76,5 +87,22 @@ namespace LZW {
             throw std::runtime_error("Unable to open file " + filePath);
         }
     }
+
+    void Codec::WriteFile(std::string fileName) {
+        std::ofstream file(fileName + ".lzw", std::ios::binary);
+        if(file) {
+            //TODO: Implement proper file writing
+
+            std::streampos begOfFile, endOfFile;
+            file.seekp(0, std::ios::end);
+            endOfFile = file.tellp();
+            file.seekp(0, std::ios::beg);
+            begOfFile = file.tellp();
+
+            long fileSize = endOfFile - begOfFile;
+            std::cout << fileName << " size: " << fileSize << std::endl;
+        }
+    }
+#pragma endregion
 
 } // LZW

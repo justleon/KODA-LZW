@@ -14,7 +14,7 @@ int main(int argc, char **argv) {
 
     LZW::Codec codec;
     std::string filePath = argv[1];
-    codec.coder(filePath);
+    codec.Coder(filePath, 20);
 
     return 0;
 }
