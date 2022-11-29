@@ -19,6 +19,7 @@ namespace LZW {
     class Codec {
     public:
         void Coder(std::string& filePath, int dictBitSize);
+        std::basic_string<uint8_t> Decoder(std::string &filePath, int dictBitSize);
 
     private:
         std::vector<uint8_t> ReadFile(std::string filePath, bool verbose = false);

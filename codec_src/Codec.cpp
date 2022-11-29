@@ -6,6 +6,7 @@
 
 #include <valarray>
 #include "Codec.h"
+#include <stdexcept>
 
 namespace LZW {
 
@@ -50,10 +51,48 @@ namespace LZW {
 
 #pragma endregion
 
+    std::basic_string<uint8_t> Codec::Decoder(std::string &filePath, int dictBitSize) {
+        if (dictBitSize >= 33) {
+            throw std::out_of_range("Dictionary index bit size can't be bigger than 32");
+        }
+        uint32_t maxDictSize = pow(2, dictBitSize);
+        // Build the dictionary.
+        int dictSize = 256;
+        std::map<uint32_t, std::basic_string<uint8_t>> dictionary;
+        for (int i = 0; i < 256; i++){
+            dictionary[i] = std::basic_string<uint8_t>(1, i);
+        }
+
+        //TODO Add read uint32 format
+        std::vector<uint32_t> inputBuffer = {};//ReadFile(filePath);
+
+        std::basic_string<uint8_t> w(1, inputBuffer[0]);
+        std::basic_string<uint8_t> result = w;
+        std::basic_string<uint8_t> entry;
+        for (int index = 1; index < inputBuffer.size(); ++index) {
+            uint32_t k = inputBuffer[index];
+            if (dictionary.count(k))
+                entry = dictionary[k];
+            else if (k == dictSize)
+                entry = w + w[0];
+            else
+                throw std::runtime_error("Bad compressed k");
+
+            result += entry;
+
+            // Add w+entry[0] to the dictionary.
+            dictionary[dictSize++] = w + entry[0];
+
+            w = entry;
+        }
+        return result;
+    }
+
 #pragma region I/O
+
     std::vector<uint8_t> Codec::ReadFile(std::string filePath, bool verbose) {
         std::ifstream file(filePath, std::ios::binary);
-        if(file) {
+        if (file) {
             std::streampos begOfFile, endOfFile;
             file.seekg(0, std::ios::end);
             endOfFile = file.tellg();
