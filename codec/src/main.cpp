@@ -4,7 +4,7 @@
 // Created on 16.11.2022.
 //
 
-#include "codec_src/Codec.h"
+#include "Codec.h"
 
 int main(int argc, char **argv) {
     if(argc <= 1 || argc > 2) {
