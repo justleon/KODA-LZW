@@ -11,8 +11,3 @@ include_directories(include)
 add_library(Codec_cAPI SHARED
         src/codec_cAPI.cpp
 )
-
-add_executable(KODA_LZW
-        src/main.cpp
-        src/Codec.cpp
-)

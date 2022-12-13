@@ -34,15 +34,15 @@ if __name__ == "__main__":
 
     print("-------------------------")
     print("Test code:")
-    data = bytes([5, 4, 3, 2, 1])
+    data = bytes("WYS*WYGWYS*WYSWYSG", 'UTF-8')
     print("Before code:")
     print(data)
     ret = codec.code(data)
     print("After code:")
     print(ret)
     print("-------------------------")
-    print("Test dedcode:")
-    data = [5, 4, 3, 2, 1]
+    print("Test decode:")
+    data = ret
     print("Before decode:")
     print(data)
     ret = codec.decode(data)
