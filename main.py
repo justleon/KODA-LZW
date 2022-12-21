@@ -3,30 +3,41 @@ import python_scrypt.data_analysis as data_analysis
 from python_scrypt import codec
 
 
-def dataAnalize(data:list, alphabet:list=[], dataName:str="", showHist:bool=False, saveHist:bool=False, histogramPath:str=""):
-    countData, countData_second, countData_third = data_analysis.calculateDataCount(data, alphabet)
-    data_analysis.showHistogram(countData, dataName=dataName, showHist=showHist, saveHist=saveHist, pathSaveFile=histogramPath)
-    entropy, entropy_second, entropy_third = data_analysis.calculateEntropy(countData, countData_second, countData_third)
+def dataAnalize(data: list, alphabet: list = [], dataName: str = "", showHist: bool = False, saveHist: bool = False,
+                histogramPath: str = ""):
+    countData, countData_second, countData_third, countData_seven = data_analysis.calculateDataCount(data, alphabet)
+    data_analysis.showHistogram(countData, dataName=dataName, showHist=showHist, saveHist=saveHist,
+                                pathSaveFile=histogramPath)
+    entropy, entropy_second, entropy_third, entropy_seven = data_analysis.calculateEntropy(countData, countData_second,
+                                                                                           countData_third,
+                                                                                           countData_seven)
 
-    return (entropy, entropy_second, entropy_third)
+    return (entropy, entropy_second, entropy_third, entropy_seven)
 
-def analizeDataFromPGM(filename:str, pathFile:str="", showHist:bool=False, saveHist:bool=False, histogramPath:str=""):
+
+def analizeDataFromPGM(filename: str, pathFile: str = "", showHist: bool = False, saveHist: bool = False,
+                       histogramPath: str = ""):
     header, data = data_analysis.readFilePGM(filename, pathFile=pathFile)
-    entropies = dataAnalize(data, list(range(header[2] + 1)), dataName=filename[:-4], showHist=showHist, saveHist=saveHist, histogramPath=histogramPath)
+    entropies = dataAnalize(data, list(range(header[2] + 1)), dataName=filename[:-4], showHist=showHist,
+                            saveHist=saveHist, histogramPath=histogramPath)
     return (data, list(range(header[2] + 1)), entropies)
 
-def analizeTextData(filename:str, pathFile:str="", showHist:bool=False, saveHist:bool=False, histogramPath:str=""):
+
+def analizeTextData(filename: str, pathFile: str = "", showHist: bool = False, saveHist: bool = False,
+                    histogramPath: str = ""):
     with open(pathFile + filename, "rb") as in_file:
         data = in_file.read()
-    entropies = dataAnalize(data, list(range(256)), dataName=filename[:-4], showHist=showHist, saveHist=saveHist, histogramPath=histogramPath)
+    entropies = dataAnalize(data, list(range(256)), dataName=filename[:-4], showHist=showHist, saveHist=saveHist,
+                            histogramPath=histogramPath)
     return (data, list(range(256)), entropies)
+
 
 def main():
     results_file = open('LZW_results.csv', 'a')
     writer = csv.writer(results_file)
 
     data = ["File_name", "Max_bit_word_size", "Compression_time", "Decompression_time",
-            "Entropy", "Entropy_2", "Entropy_3",
+            "Entropy", "Entropy_2", "Entropy_3", "Entropy_7",
             "Avg_bit_word_size", "Compression_ratio"]
     writer.writerow(data)
 
@@ -57,14 +68,15 @@ def main():
     print("Tests concluded. CLOSING...")
     results_file.close()
 
+
 def main_testloop():
-    test_max_bit_word_size = [9,13,17,20,24,28,32]
+    test_max_bit_word_size = [9, 13, 17]
     for i in test_max_bit_word_size:
         print("Current test max bit word size: " + str(i))
         codec.c_max_dict_bit_size = i
         main()
 
+
 if __name__ == "__main__":
     main_testloop()
     # main()
-

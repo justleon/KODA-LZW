@@ -54,14 +54,15 @@ def calculateDataCount(data: list, alphabet: list = []):
     countData = {}
     countDataForSecondRank = {}
     countDataForThirdRank = {}
+    countDataForSeventhRank = {}
 
     # Prepare histograms of data for base entropy
     # and data blocks for second and third rank entropy.
-
     for i in alphabet:
         countData[i] = 0
         countDataForSecondRank[np.uint32(i)] = 0
         countDataForThirdRank[np.uint32(i)] = 0
+        countDataForSeventhRank[np.uint32(i)] = 0
 
     # Calculate data counts for entropy
 
@@ -95,7 +96,18 @@ def calculateDataCount(data: list, alphabet: list = []):
             alphabet.append(block)
             countDataForThirdRank[block] = 1
 
-    return countData, countDataForSecondRank, countDataForThirdRank
+    for i in range(0, len(data) - 6, 7):
+        block = np.uint32(data[i]) + (np.uint32(data[i + 1] << 8)) + (np.uint32(data[i + 2] << 16)) + (
+            np.uint32(data[i + 3] << 24)) + (np.uint32(data[i + 4] << 32)) + (np.uint32(data[i + 5] << 40)) + (
+                    np.uint32(data[i + 6] << 48))
+
+        if block in countDataForSeventhRank.keys():
+            countDataForSeventhRank[block] += 1
+        else:
+            alphabet.append(block)
+            countDataForSeventhRank[block] = 1
+
+    return countData, countDataForSecondRank, countDataForThirdRank, countDataForSeventhRank
 
 
 def showHistogram(countData: dict, dataName: str = "", showHist: bool = False, saveHist: bool = False,
@@ -109,7 +121,7 @@ def showHistogram(countData: dict, dataName: str = "", showHist: bool = False, s
     plt.close()
 
 
-def calculateEntropy(countData: dict, countData_second: dict, countData_third: dict, logBase=2):
+def calculateEntropy(countData: dict, countData_second: dict, countData_third: dict, countData_seven: dict, logBase=2):
     countAllData = 0
     for i in countData:
         countAllData += countData[i]
@@ -132,7 +144,25 @@ def calculateEntropy(countData: dict, countData_second: dict, countData_third: d
             p = countData_third[i] / (countAllData / 3)
             entropy_third += p * math.log(p, logBase)
 
-    return entropy * (-1), entropy_second * (-1), entropy_third * (-1)
+    entropy_seven = 0
+    for i in countData_seven:
+        if countData_seven[i] > 0:
+            p = countData_seven[i] / (countAllData / 3)
+            entropy_seven += p * math.log(p, logBase)
+
+    return entropy * (-1), entropy_second * (-1 / 2), entropy_third * (-1 / 3), entropy_seven * (-1 / 7)
+
+
+def bitLength(n: int):
+    if n > 0:
+        count = math.ceil(math.log(n, 2))
+    else:
+        count = 0
+
+    if count <= 8:
+        return 8
+    else:
+        return count
 
 
 def processFile(data, file_name):
@@ -153,10 +183,12 @@ def processFile(data, file_name):
     int_decode = [x for x in decode_ret]
     print("Size of compressed data: " + str(code_ret.__sizeof__()))
     print("Size of decompressed data: " + str(int_decode.__sizeof__()))
-    comp_rate = code_ret.__sizeof__() / int_decode.__sizeof__();
+    comp_rate = code_ret.__sizeof__() / int_decode.__sizeof__()
     print("Compression rate: " + "{:.2%}".format(comp_rate) + " of original file.")
 
-    avg_bit_word_length = sum([x.bit_length() for x in code_ret]) / len(code_ret)
+    przeplyw = [bitLength(x) for x in code_ret]
+
+    avg_bit_word_length = sum(przeplyw) / int_decode.__sizeof__() * 8
     print("Average bit word length: " + str(avg_bit_word_length))
 
     # True for all test files - used to check if data is properly decoded.
@@ -165,8 +197,10 @@ def processFile(data, file_name):
     print("Entropy '%s' = %s" % (file_name, data[-1][0]))
     print("Entropy^2 '%s' = %s" % (file_name, data[-1][1]))
     print("Entropy^3 '%s' = %s" % (file_name, data[-1][2]))
+    print("Entropy^7 '%s' = %s" % (file_name, data[-1][3]))
 
     data = [file_name, codec.c_max_dict_bit_size, end_code, end_decode, data[-1][0], data[-1][1], data[-1][2],
+            data[-1][3],
             avg_bit_word_length, "{:.2%}".format(comp_rate)]
 
     return data
