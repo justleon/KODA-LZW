@@ -6,11 +6,17 @@
 // Decoder impl.: Magdalena Paszczuk
 //
 
+#include <cstdint>
+#include <iostream>
+#include <map>
+#include <vector>
+#include <valarray>
 #include "codec_cAPI.h"
 
 bool code(uint8_t *in_buf, uint32_t in_buf_len, uint32_t **out_buf, uint32_t *out_buf_len, uint32_t dictBitMaxSize) {
     if (dictBitMaxSize < 9 || dictBitMaxSize > 32) {
-        throw std::out_of_range("Dictionary index bit size can't be bigger than 32");
+        std::cerr << ("Incorrect dictionary word bit size") << std::endl;
+        return false;
     }
 
     std::cout << "CODE" << std::endl;
@@ -88,7 +94,8 @@ bool decode(uint32_t *in_buf, uint32_t in_buf_len, uint8_t **out_buf, uint32_t *
             entry = w + w[0];
         }
         else {
-            throw std::runtime_error("Bad compressed k");
+            std::cerr << ("Bad compressed k") << std::endl;
+            return false;
         }
         result += entry;
 

@@ -13,12 +13,6 @@
   #define EXPORT_C
 #endif
 
-#include <cstdint>
-#include <iostream>
-#include <map>
-#include <vector>
-#include <valarray>
-
 EXPORT_C bool code(uint8_t *in_buf, uint32_t in_buf_len,
                    uint32_t **out_buf, uint32_t *out_buf_len, uint32_t dictBitMaxSize);
 EXPORT_C void free_code(uint32_t** out_buf);
