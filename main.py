@@ -1,82 +1,69 @@
 import csv
-import python_scrypt.data_analysis as data_analysis
+from python_scrypt.data_analysis import analizeDataFromPGM, analizeTextData, printTime, resultAnalize
 from python_scrypt import codec
+from time import time
 
+def testProcessData(data, name):
+    print("\tEntropy = %s" % (data[-1][0]))
+    print("\tEntropy^2 = %s" % (data[-1][1]))
+    print("\tEntropy^3 = %s" % (data[-1][2]))
+    print("\tEntropy^7 = %s" % (data[-1][3]))
 
-def dataAnalize(data: list, alphabet: list = [], dataName: str = "", showHist: bool = False, saveHist: bool = False,
-                histogramPath: str = ""):
-    countData, countData_second, countData_third, countData_seven = data_analysis.calculateDataCount(data, alphabet)
-    data_analysis.showHistogram(countData, dataName=dataName, showHist=showHist, saveHist=saveHist,
-                                pathSaveFile=histogramPath)
-    entropy, entropy_second, entropy_third, entropy_seven = data_analysis.calculateEntropy(countData, countData_second,
-                                                                                           countData_third,
-                                                                                           countData_seven)
+    print("\tcode ...")
+    start = time()
+    code_ret = codec.code(data[0])
+    code_time = printTime(start)
+    print("\tTime code: " + code_time)
 
-    return (entropy, entropy_second, entropy_third, entropy_seven)
+    print("\tdecode ...")
+    start = time()
+    decode_ret = codec.decode(code_ret)
+    decode_time = printTime(start)
+    print("\tTime decode: " + decode_time)
+    
+    assert bytes(decode_ret) == bytes(data[0])
+    result = resultAnalize(code_ret, decode_ret)
+    print("\tCompression rate: %s of original file" % (result[0]))
+    print("\tAverage bit word length: ", result[1])
 
-
-def analizeDataFromPGM(filename: str, pathFile: str = "", showHist: bool = False, saveHist: bool = False,
-                       histogramPath: str = ""):
-    header, data = data_analysis.readFilePGM(filename, pathFile=pathFile)
-    entropies = dataAnalize(data, list(range(header[2] + 1)), dataName=filename[:-4], showHist=showHist,
-                            saveHist=saveHist, histogramPath=histogramPath)
-    return (data, list(range(header[2] + 1)), entropies)
-
-
-def analizeTextData(filename: str, pathFile: str = "", showHist: bool = False, saveHist: bool = False,
-                    histogramPath: str = ""):
-    with open(pathFile + filename, "rb") as in_file:
-        data = in_file.read()
-    entropies = dataAnalize(data, list(range(256)), dataName=filename[:-4], showHist=showHist, saveHist=saveHist,
-                            histogramPath=histogramPath)
-    return (data, list(range(256)), entropies)
-
+    return [name, codec.c_max_dict_bit_size, code_time, decode_time,
+            data[-1][0], data[-1][1], data[-1][2], data[-1][3], result[1], result[0]]
 
 def main():
-    results_file = open('LZW_results.csv', 'a')
-    writer = csv.writer(results_file)
-
-    data = ["File_name", "Max_bit_word_size", "Compression_time", "Decompression_time",
-            "Entropy", "Entropy_2", "Entropy_3", "Entropy_7",
-            "Avg_bit_word_size", "Compression_ratio"]
-    writer.writerow(data)
-
+    print("Start test LZW codec ...")
     nameDataPGMFiles = ["barbara.pgm", "boat.pgm", "chronometer.pgm", "geometr_05.pgm", "geometr_09.pgm",
                         "geometr_099.pgm", "laplace_10.pgm", "laplace_20.pgm", "laplace_30.pgm", "lena.pgm",
                         "mandril.pgm", "normal_10.pgm", "normal_30.pgm", "normal_50.pgm", "peppers.pgm", "uniform.pgm"]
-    for i in nameDataPGMFiles:
-        print(i + ": ...")
+    nameTextData = ["pan-tadeusz.txt", "random.txt", "text_test.txt", "alice29.txt", "asyoulik.txt",
+                    "c-code.txt", "lcet10.txt", "plrabn12.txt"]
 
-        data = analizeDataFromPGM(i, pathFile="data/", showHist=False, saveHist=False, histogramPath="histograms/")
-        data_final = data_analysis.processFile(data, i)
-        writer.writerow(data_final)
+    results_file = open('LZW_results.csv', 'a')
+    writer = csv.writer(results_file)
 
-        print(i + ": DONE")
+    data_header = ["File_name", "Max_bit_word_size", "Compression_time", "Decompression_time",
+                    "Entropy", "Entropy_2", "Entropy_3", "Entropy_7", "Avg_bit_word_size", "Compression_ratio"]
+    writer.writerow(data_header)
 
-    # nameTextData = ["text_test.txt", "pan-tadeusz.txt"]
-    nameTextData = ["pan-tadeusz.txt", "random.txt", "text_test.txt", "alice29.txt", "asyoulik.txt", "c-code.txt",
-                    "lcet10.txt", "plrabn12.txt"]
-    for i in nameTextData:
-        print(i + ": ...")
+    for max_bit_word_size in [9, 13, 17]:
+        codec.c_max_dict_bit_size = max_bit_word_size
 
-        data = analizeTextData(i, pathFile="data/", showHist=False, saveHist=False, histogramPath="histograms/")
-        data_final = data_analysis.processFile(data, i)
-        writer.writerow(data_final)
+        for i in nameDataPGMFiles:
+            print("Start %s for max_bit_word_size = %s ..." % (i, max_bit_word_size))
+            data = analizeDataFromPGM(i, pathFile="data/", showHist=False, saveHist=True, histogramPath="histograms/")
+            data_final = testProcessData(data, i)
+            writer.writerow(data_final)
+            print("End %s for max_bit_word_size = %s" % (i, max_bit_word_size))
 
-        print(i + ": DONE")
+        for i in nameTextData:
+            print("Start %s for max_bit_word_size = %s ..." % (i, max_bit_word_size))
+            data = analizeTextData(i, pathFile="data/", showHist=False, saveHist=True, histogramPath="histograms/")
+            data_final = testProcessData(data, i)
+            writer.writerow(data_final)
+            print("End %s for max_bit_word_size = %s" % (i, max_bit_word_size))
 
-    print("Tests concluded. CLOSING...")
     results_file.close()
-
-
-def main_testloop():
-    test_max_bit_word_size = [9, 13, 17]
-    for i in test_max_bit_word_size:
-        print("Current test max bit word size: " + str(i))
-        codec.c_max_dict_bit_size = i
-        main()
+    print("End test LZW codec")
 
 
 if __name__ == "__main__":
-    main_testloop()
-    # main()
+    main()
