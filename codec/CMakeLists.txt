@@ -8,6 +8,6 @@ set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "$<0:>${PROJECT_SOURCE_DIR}/lib")
 
 include_directories(include)
 
-add_library(Codec_cAPI SHARED
-        src/codec_cAPI.cpp
+add_library(Codec_lzw SHARED
+        src/codec_lzw.cpp
 )

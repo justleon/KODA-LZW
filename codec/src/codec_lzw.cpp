@@ -1,5 +1,5 @@
 //
-// LZW Codec API
+// LZW Codec
 // WUT project for Data Compression
 // Wrapper: Alicja Turowska
 // Coder impl.: Łukasz Pokorzyński
@@ -11,7 +11,7 @@
 #include <map>
 #include <vector>
 #include <valarray>
-#include "codec_cAPI.h"
+#include "codec_lzw.h"
 
 bool code(uint8_t *in_buf, uint32_t in_buf_len, uint32_t **out_buf, uint32_t *out_buf_len, uint32_t dictBitMaxSize) {
     if (dictBitMaxSize < 9 || dictBitMaxSize > 32) {
