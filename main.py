@@ -41,10 +41,9 @@ def main():
             "Avg_bit_word_size", "Compression_ratio"]
     writer.writerow(data)
 
-    # nameDataPGMFiles = ["barbara.pgm", "boat.pgm", "chronometer.pgm", "geometr_05.pgm", "geometr_09.pgm",
-    #                     "geometr_099.pgm", "laplace_10.pgm", "laplace_20.pgm", "laplace_30.pgm", "lena.pgm",
-    #                     "mandril.pgm", "normal_10.pgm", "normal_30.pgm", "normal_50.pgm", "peppers.pgm", "uniform.pgm"]
-    nameDataPGMFiles = []
+    nameDataPGMFiles = ["barbara.pgm", "boat.pgm", "chronometer.pgm", "geometr_05.pgm", "geometr_09.pgm",
+                        "geometr_099.pgm", "laplace_10.pgm", "laplace_20.pgm", "laplace_30.pgm", "lena.pgm",
+                        "mandril.pgm", "normal_10.pgm", "normal_30.pgm", "normal_50.pgm", "peppers.pgm", "uniform.pgm"]
     for i in nameDataPGMFiles:
         print(i + ": ...")
 
@@ -55,7 +54,8 @@ def main():
         print(i + ": DONE")
 
     # nameTextData = ["text_test.txt", "pan-tadeusz.txt"]
-    nameTextData = ["pan-tadeusz.txt"]
+    nameTextData = ["pan-tadeusz.txt", "random.txt", "text_test.txt", "alice29.txt", "asyoulik.txt", "c-code.txt",
+                    "lcet10.txt", "plrabn12.txt"]
     for i in nameTextData:
         print(i + ": ...")
 
