@@ -1,6 +1,6 @@
 from ctypes import *
 
-libc = CDLL("codec/lib/libCodec_cAPI.so")
+libc = CDLL("codec/lib/libCodec_lzw.so")
 
 libc.code.argtypes = [POINTER(c_uint8), c_uint32, POINTER(POINTER(c_uint32)), POINTER(c_uint32), c_uint32]
 libc.code.restype = c_bool

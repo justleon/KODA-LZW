@@ -3,8 +3,6 @@ import numpy as np
 import math
 from time import time
 
-from python_scrypt import codec
-
 
 def printTime(start):
     end = time()
@@ -153,54 +151,45 @@ def calculateEntropy(countData: dict, countData_second: dict, countData_third: d
     return entropy * (-1), entropy_second * (-1 / 2), entropy_third * (-1 / 3), entropy_seven * (-1 / 7)
 
 
+def dataAnalize(data: list, alphabet: list = [], dataName: str = "", showHist: bool = False, saveHist: bool = False,
+                histogramPath: str = ""):
+    countData, countData_second, countData_third, countData_seven = calculateDataCount(data, alphabet)
+    showHistogram(countData, dataName=dataName, showHist=showHist, saveHist=saveHist,
+                                pathSaveFile=histogramPath)
+    entropy, entropy_second, entropy_third, entropy_seven = calculateEntropy(countData, countData_second,
+                                                                                           countData_third,
+                                                                                           countData_seven)
+
+    return (entropy, entropy_second, entropy_third, entropy_seven)
+
+
+def analizeDataFromPGM(filename: str, pathFile: str = "", showHist: bool = False, saveHist: bool = False,
+                       histogramPath: str = ""):
+    header, data = readFilePGM(filename, pathFile=pathFile)
+    entropies = dataAnalize(data, list(range(header[2] + 1)), dataName=filename[:-4], showHist=showHist,
+                            saveHist=saveHist, histogramPath=histogramPath)
+    return (data, list(range(header[2] + 1)), entropies)
+
+
+def analizeTextData(filename: str, pathFile: str = "", showHist: bool = False, saveHist: bool = False,
+                    histogramPath: str = ""):
+    with open(pathFile + filename, "rb") as in_file:
+        data = in_file.read()
+    entropies = dataAnalize(data, list(range(256)), dataName=filename[:-4], showHist=showHist, saveHist=saveHist,
+                            histogramPath=histogramPath)
+    return (data, list(range(256)), entropies)
+
+
 def bitLength(n: int):
     if n > 0:
         count = math.ceil(math.log(n, 2))
-    else:
-        count = 0
-
-    if count <= 8:
-        return 8
-    else:
-        return count
+        if count > 8:
+            return count
+    return 8
 
 
-def processFile(data, file_name):
-    start = time()
-    code_ret = codec.code(data[0])
-    end_code = printTime(start)
-    print("Time elapsed for CODE: " + end_code)
-
-    start = time()
-    decode_ret = codec.decode(code_ret)
-    end_decode = printTime(start)
-    print("Time elapsed for DECODE: " + end_decode)
-
-    # Line below prints the size of decompressed data in bytes -
-    # - equals the real size of file, minus ~5 bytes, for every test file.
-    # print("Size of decompressed data: " + str(decode_ret.__sizeof__()))
-
-    int_decode = [x for x in decode_ret]
-    print("Size of compressed data: " + str(code_ret.__sizeof__()))
-    print("Size of decompressed data: " + str(int_decode.__sizeof__()))
-    comp_rate = code_ret.__sizeof__() / int_decode.__sizeof__()
-    print("Compression rate: " + "{:.2%}".format(comp_rate) + " of original file.")
-
-    przeplyw = [bitLength(x) for x in code_ret]
-
-    avg_bit_word_length = sum(przeplyw) / int_decode.__sizeof__() * 8
-    print("Average bit word length: " + str(avg_bit_word_length))
-
-    # True for all test files - used to check if data is properly decoded.
-    # print("Is decoded data the same as original? " + str((int_decode == data[0]).all()))
-
-    print("Entropy '%s' = %s" % (file_name, data[-1][0]))
-    print("Entropy^2 '%s' = %s" % (file_name, data[-1][1]))
-    print("Entropy^3 '%s' = %s" % (file_name, data[-1][2]))
-    print("Entropy^7 '%s' = %s" % (file_name, data[-1][3]))
-
-    data = [file_name, codec.c_max_dict_bit_size, end_code, end_decode, data[-1][0], data[-1][1], data[-1][2],
-            data[-1][3],
-            avg_bit_word_length, "{:.2%}".format(comp_rate)]
-
-    return data
+def resultAnalize(encode_data, decode_data):
+    list_decode_data = [x for x in decode_data]
+    comp_rate = encode_data.__sizeof__() / list_decode_data.__sizeof__()
+    avg_bit_word_length = sum([bitLength(x) for x in encode_data]) / list_decode_data.__sizeof__() * 8
+    return ["{:.2%}".format(comp_rate), avg_bit_word_length]

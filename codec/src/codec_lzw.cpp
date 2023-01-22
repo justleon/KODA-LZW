@@ -1,5 +1,5 @@
 //
-// LZW Codec API
+// LZW Codec
 // WUT project for Data Compression
 // Wrapper: Alicja Turowska
 // Coder impl.: Łukasz Pokorzyński
@@ -11,15 +11,13 @@
 #include <map>
 #include <vector>
 #include <valarray>
-#include "codec_cAPI.h"
+#include "codec_lzw.h"
 
 bool code(uint8_t *in_buf, uint32_t in_buf_len, uint32_t **out_buf, uint32_t *out_buf_len, uint32_t dictBitMaxSize) {
     if (dictBitMaxSize < 9 || dictBitMaxSize > 32) {
         std::cerr << ("Incorrect dictionary word bit size") << std::endl;
         return false;
     }
-
-    std::cout << "CODE" << std::endl;
 
     //initialize basic dictionary with 255 characters
     std::map<std::basic_string<uint8_t>, int> table;
@@ -73,8 +71,6 @@ void free_code(uint32_t** out_buf) {
 }
 
 bool decode(uint32_t *in_buf, uint32_t in_buf_len, uint8_t **out_buf, uint32_t *out_buf_len) {
-    std::cout << "DECODE" << std::endl;
-
     // Build the dictionary.
     int dictSize = 256;
     std::map<uint32_t, std::basic_string<uint8_t>> dictionary;
