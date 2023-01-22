@@ -39,6 +39,11 @@ Uzyskane histogramy umieszczane są w folderze 'histograms'.<br>
 Pozostałe dane umieszczane są w pliku 'LZW_results.csv'.<br>
 Funkcje służace do wczytania oraz analizy danych i wyników znajdują się w pliku 'KODA-LZW/python_scrypt/data_analysis.py'.
 
+### Pobranie wymaganych modułów pythonowych
+```console
+KODA-LZW$ pip3 install -r requirements.txt
+```
+
 ### Uruchomienie skryptu
 ```console
 KODA-LZW$ python3 test_codec.py
