@@ -1,0 +1,3 @@
+Probny text dla kodeka LZW.
+Druga linia probnego textu.
+Trzecia linia.
